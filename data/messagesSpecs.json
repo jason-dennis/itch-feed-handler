@@ -1,0 +1,341 @@
+{
+    "S": {
+        "LENGTH": 12,
+        "FORMAT": ">1s HH 6s 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Event Code"
+        ],
+        "ASCII_FIELDS": [0, 4],
+        "UINT48_FIELDS": [3]
+    },
+    "R": {
+        "LENGTH": 39,
+        "FORMAT": ">1s HH 6s 8s 1s 1s I 1s 1s 2s 1s 1s 1s 1s 1s I 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "Market Category",
+            "Financial Status Indicator",
+            "Round Lot Size",
+            "Round Lots Only",
+            "Issue Classification",
+            "Issue Sub Type",
+            "Authenticity",
+            "Short Sale Threshold Indicator",
+            "IPO Flag",
+            "LULD Reference Price Tier",
+            "ETP Flag",
+            "ETP Leverage Factor",
+            "Inverse Indicator"
+        ],
+        "ASCII_FIELDS": [0, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 17],
+        "UINT48_FIELDS": [3]
+    },
+    "H": {
+        "LENGTH": 25,
+        "FORMAT": ">1s HH 6s 8s 1s 1s 4s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "Trading State",
+            "Reserved",
+            "Reason"
+        ],
+        "ASCII_FIELDS": [0, 4, 5, 6, 7],
+        "UINT48_FIELDS": [3]
+    },
+    "Y": {
+        "LENGTH": 20,
+        "FORMAT": ">1s HH 6s 8s 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "Reg SHO Action"
+        ],
+        "ASCII_FIELDS": [0, 4, 5],
+        "UINT48_FIELDS": [3]
+    },
+    "L": {
+        "LENGTH": 26,
+        "FORMAT": ">1s HH 6s 4s 8s 1s 1s 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "MPID",
+            "Stock",
+            "Primary Market Maker",
+            "Market Maker Mode",
+            "Market Participant State"
+        ],
+        "ASCII_FIELDS": [0, 4, 5, 6, 7, 8],
+        "UINT48_FIELDS": [3]
+    },
+    "V": {
+        "LENGTH": 35,
+        "FORMAT": ">1s HH 6s QQQ",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Level 1",
+            "Level 2",
+            "Level 3"
+        ],
+        "ASCII_FIELDS": [0],
+        "UINT48_FIELDS": [3]
+    },
+    "W": {
+        "LENGTH": 12,
+        "FORMAT": ">1s HH 6s 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Breached Level"
+        ],
+        "ASCII_FIELDS": [0, 4],
+        "UINT48_FIELDS": [3]
+    },
+    "J": {
+        "LENGTH": 35,
+        "FORMAT": ">1s HH 6s 8s IIII",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "Auction Collar Reference Price",
+            "Upper Auction Collar Price",
+            "Lower Auction Collar Price",
+            "Auction Collar Extension"
+        ],
+        "ASCII_FIELDS": [0, 4],
+        "UINT48_FIELDS": [3]
+    },
+    "h": {
+        "LENGTH": 21,
+        "FORMAT": ">1s HH 6s 8s 1s 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "Market Code",
+            "Operational Halt Action"
+        ],
+        "ASCII_FIELDS": [0, 4, 5, 6],
+        "UINT48_FIELDS": [3]
+    },
+    "A": {
+        "LENGTH": 36,
+        "FORMAT": ">1s HH 6s Q 1s I 8s I",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Order Reference Number",
+            "Buy/Sell Indicator",
+            "Shares",
+            "Stock",
+            "Price"
+        ],
+        "ASCII_FIELDS": [0, 5, 7],
+        "UINT48_FIELDS": [3]
+    },
+    "F": {
+        "LENGTH": 40,
+        "FORMAT": ">1s HH 6s Q 1s I 8s I 4s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Order Reference Number",
+            "Buy/Sell Indicator",
+            "Shares",
+            "Stock",
+            "Price",
+            "Attribution"
+        ],
+        "ASCII_FIELDS": [0, 5, 7, 9],
+        "UINT48_FIELDS": [3]
+    },
+    "E": {
+        "LENGTH": 31,
+        "FORMAT": ">1s HH 6s Q I Q",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Order Reference Number",
+            "Executed Shares",
+            "Match Number"
+        ],
+        "ASCII_FIELDS": [0],
+        "UINT48_FIELDS": [3]
+    },
+    "C": {
+        "LENGTH": 36,
+        "FORMAT": ">1s HH 6s Q I Q 1s I",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Order Reference Number",
+            "Executed Shares",
+            "Match Number",
+            "Printable",
+            "Execution Price"
+        ],
+        "ASCII_FIELDS": [0, 7],
+        "UINT48_FIELDS": [3]
+    },
+    "X": {
+        "LENGTH": 23,
+        "FORMAT": ">1s HH 6s Q I",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Order Reference Number",
+            "Canceled Shares"
+        ],
+        "ASCII_FIELDS": [0],
+        "UINT48_FIELDS": [3]
+    },
+    "D": {
+        "LENGTH": 19,
+        "FORMAT": ">1s HH 6s Q",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Order Reference Number"
+        ],
+        "ASCII_FIELDS": [0],
+        "UINT48_FIELDS": [3]
+    },
+    "U": {
+        "LENGTH": 35,
+        "FORMAT": ">1s HH 6s QQ II",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Original Order Reference Number",
+            "New Order Reference Number",
+            "Shares",
+            "Price"
+        ],
+        "ASCII_FIELDS": [0],
+        "UINT48_FIELDS": [3]
+    },
+    "P": {
+        "LENGTH": 44,
+        "FORMAT": ">1s HH 6s Q 1s I 8s I Q",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Order Reference Number",
+            "Buy/Sell Indicator",
+            "Shares",
+            "Stock",
+            "Price",
+            "Match Number"
+        ],
+        "ASCII_FIELDS": [0, 5, 7],
+        "UINT48_FIELDS": [3]
+    },
+    "Q": {
+        "LENGTH": 40,
+        "FORMAT": ">1s HH 6s Q 8s I Q 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Shares",
+            "Stock",
+            "Cross Price",
+            "Match Number",
+            "Cross Type"
+        ],
+        "ASCII_FIELDS": [0, 5, 8],
+        "UINT48_FIELDS": [3]
+    },
+    "B": {
+        "LENGTH": 19,
+        "FORMAT": ">1s HH 6s Q",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Match Number"
+        ],
+        "ASCII_FIELDS": [0],
+        "UINT48_FIELDS": [3]
+    },
+    "I": {
+        "LENGTH": 50,
+        "FORMAT": ">1s HH 6s QQ 1s 8s III 1s 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Paired Shares",
+            "Imbalance Shares",
+            "Imbalance Direction",
+            "Stock",
+            "Far Price",
+            "Near Price",
+            "Current Reference Price",
+            "Cross Type",
+            "Price Variation Indicator"
+        ],
+        "ASCII_FIELDS": [0, 6, 7, 11, 12],
+        "UINT48_FIELDS": [3]
+    },
+    "N": {
+        "LENGTH": 20,
+        "FORMAT": ">1s HH 6s 8s 1s",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "Interest Flag"
+        ],
+        "ASCII_FIELDS": [0, 4, 5],
+        "UINT48_FIELDS": [3]
+    }
+}

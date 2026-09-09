@@ -1,0 +1,5 @@
+*.jsonl
+*.BX_ITCH_50
+*.itch
+build/
+cmake-build-*/
