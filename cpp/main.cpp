@@ -9,65 +9,66 @@
 #include <vector>
 #include <chrono>
 #include <string>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <cstdio>
 int main(int argc, char** argv){
 
     if(argc != 2){
-        exit(1);
+        throw std::runtime_error("Invalid numbers of arguments");
     }
-    std::ifstream f("sample.BX_ITCH_50", std::ios::binary | std::ios::ate);
-    if(!f){
-        return 1;
+    int fd = open("sample.BX_ITCH_50", O_RDONLY);
+    if(fd < 0){
+        throw std::runtime_error("invalid file descriptor");
     }
+
+    struct stat st;
+    if(fstat(fd, &st) < 0){
+        close(fd);
+        throw std::runtime_error("invalid fstat");
+    }
+
+    size_t size = st.st_size;
+    const uint8_t* buffer = static_cast<const uint8_t*>(mmap(nullptr, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0));
+    if(buffer == MAP_FAILED){
+        throw std::runtime_error("mmap failed");
+    }
+    close(fd);
+
     if(std::string(argv[1]) == "count"){
-
-        size_t size = static_cast<size_t>(f.tellg());
-        std::vector<uint8_t> buffer(size);
-        f.seekg(0);
-        f.read(reinterpret_cast<char*>(buffer.data()), size);
-
         CountHandler handler;
         auto before = std::chrono::steady_clock::now();
-        parse(buffer.data(), size, handler);
+        parse(buffer, size, handler);
         auto after = std::chrono::steady_clock::now();
         handler.print();
         const auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
         std::cout << int_ms.count() << " ms\n";
     }
     else if(std::string(argv[1]) == "decode"){
-        size_t size = static_cast<size_t>(f.tellg());
-        std::vector<uint8_t> buffer(size);
-        f.seekg(0);
-        f.read(reinterpret_cast<char*>(buffer.data()), size);
-
         DecodeHandler handler;
         auto before = std::chrono::steady_clock::now();
-        parse(buffer.data(), size, handler);
+        parse(buffer, size, handler);
         auto after = std::chrono::steady_clock::now();
-
         const auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
         std::cout << int_ms.count() << " ms\n";
         std::cout<<handler.acc;
 
     }
-    else{
-        size_t size = static_cast<size_t>(f.tellg());
-        std::vector<uint8_t> buffer(size);
-        f.seekg(0);
-        f.read(reinterpret_cast<char*>(buffer.data()), size);
-
+    else if(std::string(argv[1]) == "jsonl"){
         JsonlHandler handler("messages_cpp.jsonl");
         auto before = std::chrono::steady_clock::now();
-        parse(buffer.data(), size, handler);
+        parse(buffer, size, handler);
         auto after = std::chrono::steady_clock::now();
 
         const auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
         std::cout << int_ms.count() << " ms\n";
 
     }
-
-
-//    handler.print();
-
-
+    else{
+        std::cout<<"Handler invalid";
+    }
+    munmap((void*)buffer, size);
     return 0;
 }
