@@ -10,4 +10,5 @@ add_executable(ITCHFeedhandler
         cpp/itch_messages.h
         cpp/itch_parser.h
         cpp/main.cpp
-        cpp/jsonwriter.h)
+        cpp/jsonwriter.h
+        cpp/mapped_file.h)

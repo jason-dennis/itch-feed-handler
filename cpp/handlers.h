@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include "jsonwriter.h"
+#include "itch_messages.h"
 
 struct CountHandler{
     uint64_t counts[256] = {};
@@ -364,9 +365,7 @@ struct JsonlHandler{
             case 'I': write_noii(buffer); break;
             case 'N': write_price_improvement_indicator(buffer); break;
             default:
-                throw std::runtime_error(
-                        std::string("Unknown Message Type: ")
-                        + static_cast<char>(message_type));
+               break;
         }
     }
 };
@@ -746,9 +745,7 @@ struct DecodeHandler{
             case 'I': write_noii(buffer); break;
             case 'N': write_price_improvement_indicator(buffer); break;
             default:
-                throw std::runtime_error(
-                        std::string("Unknown Message Type: ")
-                        + static_cast<char>(message_type));
+                break;
         }
     }
 };
