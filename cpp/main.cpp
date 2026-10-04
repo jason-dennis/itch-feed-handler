@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     if(argc != 2){
         throw std::runtime_error("Invalid numbers of arguments");
     }
-    MappedFile mapped("truncated.BX_ITCH_50");
+    MappedFile mapped("sample.BX_ITCH_50");
     size_t size = mapped.size();
     const uint8_t* buffer = mapped.data();
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
 
     }
     else if(std::string(argv[1]) == "jsonl"){
-        JsonlHandler handler("messages_cpp.jsonl");
+        JsonlHandler handler("data/messages_cpp.jsonl");
         auto before = std::chrono::steady_clock::now();
        auto stats =  parse(buffer, size, handler);
         auto after = std::chrono::steady_clock::now();
