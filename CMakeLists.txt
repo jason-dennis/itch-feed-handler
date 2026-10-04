@@ -4,11 +4,13 @@ project(ITCHFeedhandler)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(cpp)
-
 add_executable(ITCHFeedhandler
-        cpp/handlers.h
-        cpp/itch_messages.h
-        cpp/itch_parser.h
-        cpp/main.cpp
-        cpp/jsonwriter.h
-        cpp/mapped_file.h)
+        cpp/include/handlers.h
+        cpp/include/itch_messages.h
+        cpp/include/itch_parser.h
+        cpp/src/main.cpp
+        cpp/include/jsonwriter.h
+        cpp/include/mapped_file.h
+        cpp/include/byte_order.h)
+
+target_include_directories(ITCHFeedhandler PRIVATE cpp/include)

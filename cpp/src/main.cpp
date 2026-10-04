@@ -3,7 +3,7 @@
 //
 #include "handlers.h"
 #include "itch_messages.h"
-#include "itch_parser.h"
+#include "../include/itch_parser.h"
 #include <cstdint>
 #include <chrono>
 #include <string>
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
 
     }
     else if(std::string(argv[1]) == "jsonl"){
-        JsonlHandler handler("data/messages_cpp.jsonl");
+        JsonlHandler handler("`data/messages_cpp.jsonl");
         auto before = std::chrono::steady_clock::now();
        auto stats =  parse(buffer, size, handler);
         auto after = std::chrono::steady_clock::now();

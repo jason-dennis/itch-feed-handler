@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <sstream>
 #include "itch_messages.h"
+#include "byte_order.h"
 
 struct ParseStats {
     uint64_t parsed{}, skipped{};
@@ -23,9 +24,7 @@ ParseStats parse(const uint8_t* buffer, size_t size,Handler& handler){
             msg << "truncated header at offset " << offset;
             throw std::runtime_error(msg.str());
         }
-        uint16_t message_length = buffer[offset];
-        message_length <<= 8;
-        message_length |= buffer[offset + 1];
+        uint16_t message_length = read_be16(buffer + offset);
         if (message_length == 0) {
             std::ostringstream msg;
             msg <<"zero-length message at offset " << offset;
