@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <sstream>
-#include "itch_messages.h"
+#include "messages_gen.h"
 #include "byte_order.h"
 
 struct ParseStats {
@@ -38,18 +38,18 @@ ParseStats parse(const uint8_t* buffer, size_t size,Handler& handler){
             throw std::runtime_error(msg.str());
         }
         uint8_t message_type = buffer[offset];
-        if (MESSAGE_LENGTHS[message_type] == 0) {
+        if (itch::MESSAGE_LENGTHS[message_type] == 0) {
             stats.skipped ++;
             offset += message_length;
             continue;
         }
-        if(MESSAGE_LENGTHS[message_type] != message_length){
+        if(itch::MESSAGE_LENGTHS[message_type] != message_length){
             std::ostringstream msg;
             msg << "invalid length for type " << message_type << " at offset " << offset - 2
-                <<": expected "<< MESSAGE_LENGTHS[message_type] << ", got " << message_length;
+                <<": expected "<< itch::MESSAGE_LENGTHS[message_type] << ", got " << message_length;
             throw std::runtime_error(msg.str());
         }
-        handler.process(message_type, buffer + offset);
+        itch::dispatch(message_type, buffer + offset, handler);
         offset += message_length;
         stats.parsed ++;
     }

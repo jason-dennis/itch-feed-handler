@@ -42,13 +42,6 @@ public:
         os_ << '"';
     }
 
-    // timestamp pe 6 bytes big-endian
-    void ts(const char* name, const uint8_t* p) {
-        uint64_t v = 0;
-        for (int i = 0; i < 6; ++i) v = (v << 8) | p[i];
-        num(name, v);
-    }
-
     void end() { os_ << "}\n"; }
 };
 

@@ -1,39 +1,23 @@
 #!/usr/bin/env python3
 """
-Genereaza cele 21 de functii de serializare din messagesSpecs.json.
+Genereaza codul C++ pentru mesajele ITCH 5.0 din messagesSpecs.json.
 
-    python3 gen_writers.py messagesSpecs.json > writers.inc
+    python3 generate.py <messagesSpecs.json> <messages_gen.h> <json_gen.h>
 
-Numele campurilor din JSON ajung neschimbate in output (contractul cu oracolul),
-iar identificatorii de struct se deriva din ele dupa aceeasi regula peste tot.
+messages_gen.h  -- MESSAGE_LENGTHS, cate un struct decodat per tip (cu decode()),
+                   si dispatch(), care decodeaza un mesaj si apeleaza handler.on(...)
+json_gen.h      -- cate o functie write_json(JsonLine&, const Struct&) per tip
+
+Numele campurilor din JSON ajung neschimbate in output-ul JSON (contractul cu
+oracolul), iar numele membrilor C++ se deriva din ele cu ident(), peste tot la fel.
 """
 import json
 import sys
 
-# litera -> (nume struct, nume functie)
-STRUCTS = {
-    'S': ('SystemEvent',               'write_system_event'),
-    'R': ('StockDirectory',            'write_stock_directory'),
-    'H': ('StockTradingAction',        'write_stock_trading_action'),
-    'Y': ('RegSHORestriction',         'write_reg_sho_restriction'),
-    'L': ('MarketParticipantPosition', 'write_market_participant_position'),
-    'V': ('MWCBDeclineLevel',          'write_mwcb_decline_level'),
-    'W': ('MWCBStatus',                'write_mwcb_status'),
-    'J': ('LULDAuctionCollar',         'write_luld_auction_collar'),
-    'h': ('OperationalHalt',           'write_operational_halt'),
-    'A': ('AddOrder',                  'write_add_order'),
-    'F': ('AddOrderMPID',              'write_add_order_mpid'),
-    'E': ('OrderExecuted',             'write_order_executed'),
-    'C': ('OrderExecutedWithPrice',    'write_order_executed_with_price'),
-    'X': ('OrderCancel',               'write_order_cancel'),
-    'D': ('OrderDelete',               'write_order_delete'),
-    'U': ('OrderReplace',              'write_order_replace'),
-    'P': ('TradeMessage',              'write_trade_message'),
-    'Q': ('CrossTrade',                'write_cross_trade'),
-    'B': ('BrokenTrade',               'write_broken_trade'),
-    'I': ('NOII',                      'write_noii'),
-    'N': ('PriceImprovementIndicator', 'write_price_improvement_indicator'),
-}
+HEADER_COMMENT = (
+    "// Generat de generate.py din messagesSpecs.json -- nu edita manual.\n"
+    "// Se regenereaza automat la build cand se modifica specificatiile.\n"
+)
 
 
 def ident(field_name):
@@ -51,7 +35,7 @@ def ident(field_name):
 
 
 def tokens(fmt):
-    """'>1s HH 6s 1s' -> [('s',1), ('int',2), ('int',2), ('s',6), ('s',1)]"""
+    """'>1s HH 6s 1s' -> [('s', 1), ('int', 2), ('int', 2), ('s', 6), ('s', 1)]"""
     out = []
     i = 0
     fmt = fmt.replace(' ', '').lstrip('>')
@@ -73,76 +57,217 @@ def tokens(fmt):
     return out
 
 
-def emit(letter, spec):
-    struct_name, func_name = STRUCTS[letter]
+def fields_of(letter, spec):
+    """
+    Lista de campuri (fara Message Type), fiecare ca dict cu:
+      name   -- numele original din JSON
+      member -- numele membrului C++
+      kind   -- 'u48', 'char', 'str' sau 'int'
+      size   -- dimensiunea in bytes
+      offset -- offset-ul in mesaj (byte-ul de tip e la offset 0)
+    Verifica si consistenta specificatiei.
+    """
     toks = tokens(spec['FORMAT'])
-    fields = spec['FIELDS']
-    assert len(toks) == len(fields), \
-        f"{letter}: FORMAT are {len(toks)} campuri, FIELDS are {len(fields)}"
-    ts_idx = set(spec.get('UINT48_FIELDS', []))
+    names = spec['FIELDS']
+    assert len(toks) == len(names), \
+        f"{letter}: FORMAT are {len(toks)} campuri, FIELDS are {len(names)}"
+    assert toks[0] == ('s', 1) and names[0] == 'Message Type', \
+        f"{letter}: primul camp trebuie sa fie Message Type (1s)"
 
-    lines = [
-        f"void {func_name}(const uint8_t* buffer) {{",
-        f"    auto* m = reinterpret_cast<const {struct_name}*>(buffer);",
-        f"    JsonLine j(json);",
-    ]
+    u48 = set(spec.get('UINT48_FIELDS', []))
+    ascii_ = set(spec.get('ASCII_FIELDS', []))
 
-    # aliniaza numele campurilor ca sa se citeasca coloana
-    width = max(len(f) for f in fields) + 2
-
-    for idx, (field, (kind, size)) in enumerate(zip(fields, toks)):
-        name = f'"{field}",'.ljust(width + 1)
-        member = f"m->{ident(field)}"
-        if idx in ts_idx:
-            assert kind == 's' and size == 6, f"{letter}: campul {idx} nu e 6s"
-            lines.append(f"    j.ts ({name} {member});")
-        elif kind == 's' and size == 1:
-            lines.append(f"    j.chr({name} {member});")
+    out = []
+    seen = set()
+    offset = toks[0][1]
+    for idx in range(1, len(toks)):
+        kind, size = toks[idx]
+        if idx in u48:
+            assert (kind, size) == ('s', 6), f"{letter}: campul {idx} e in UINT48_FIELDS dar nu e 6s"
+            k = 'u48'
         elif kind == 's':
-            lines.append(f"    j.str({name} {member}, {size});")
+            assert idx in ascii_, f"{letter}: campul {idx} e 's' dar nu e nici ASCII, nici UINT48"
+            k = 'char' if size == 1 else 'str'
         else:
-            swap = {2: '__builtin_bswap16', 4: '__builtin_bswap32',
-                    8: '__builtin_bswap64'}[size]
-            lines.append(f"    j.num({name} {swap}({member}));")
+            assert idx not in ascii_, f"{letter}: campul {idx} e numeric dar apare in ASCII_FIELDS"
+            k = 'int'
+        member = ident(names[idx])
+        assert member not in seen, f"{letter}: nume de membru duplicat {member!r}"
+        seen.add(member)
+        out.append({'name': names[idx], 'member': member, 'kind': k,
+                    'size': size, 'offset': offset})
+        offset += size
 
-    lines.append("    j.end();")
-    lines.append("}")
+    assert offset == spec['LENGTH'], \
+        f"{letter}: suma campurilor e {offset}, dar LENGTH e {spec['LENGTH']}"
+    return out
+
+
+CPP_TYPE = {2: 'uint16_t', 4: 'uint32_t', 8: 'uint64_t'}
+READ_FN = {2: 'read_be16', 4: 'read_be32', 8: 'read_be64'}
+
+
+def cpp_type(f):
+    if f['kind'] == 'u48':
+        return 'uint64_t'
+    if f['kind'] == 'char':
+        return 'char'
+    if f['kind'] == 'str':
+        return f"std::array<char, {f['size']}>"
+    return CPP_TYPE[f['size']]
+
+
+def decode_stmt(f):
+    m, off = f['member'], f['offset']
+    if f['kind'] == 'u48':
+        return f"m.{m} = read_be48(p + {off});"
+    if f['kind'] == 'char':
+        return f"m.{m} = static_cast<char>(p[{off}]);"
+    if f['kind'] == 'str':
+        return f"std::memcpy(m.{m}.data(), p + {off}, {f['size']});"
+    return f"m.{m} = {READ_FN[f['size']]}(p + {off});"
+
+
+def emit_lengths(specs):
+    table = [0] * 256
+    for letter, spec in specs.items():
+        table[ord(letter)] = spec['LENGTH']
+    lines = ["// Lungimea fiecarui tip de mesaj; 0 = tip necunoscut (sarit de parser).",
+             "constexpr uint16_t MESSAGE_LENGTHS[256] = {"]
+    for row in range(0, 256, 16):
+        vals = ', '.join(f"{v:2d}" for v in table[row:row + 16])
+        lines.append(f"    {vals},  // 0x{row:02X}")
+    lines.append("};")
     return '\n'.join(lines)
 
+
+def emit_struct(letter, spec):
+    name = spec['NAME']
+    fields = fields_of(letter, spec)
+    width = max(len(cpp_type(f)) for f in fields)
+
+    lines = [f"// --- {letter}: {name} ---",
+             f"struct {name} {{",
+             f"    static constexpr char     type   = '{letter}';",
+             f"    static constexpr uint16_t length = {spec['LENGTH']};",
+             ""]
+    for f in fields:
+        lines.append(f"    {cpp_type(f).ljust(width)} {f['member']};")
+    lines.append("")
+    lines.append(f"    static {name} decode(const uint8_t* p) {{")
+    lines.append(f"        {name} m;")
+    for f in fields:
+        lines.append(f"        {decode_stmt(f)}")
+    lines.append("        return m;")
+    lines.append("    }")
+    lines.append("};")
+    return '\n'.join(lines)
+
+
 def emit_dispatch(specs):
-    lines = [
-        "void process(uint8_t message_type, const uint8_t* buffer) {",
-        "    switch (message_type) {",
-    ]
-    for letter in specs:
-        _, func = STRUCTS[letter]
-        lines.append(f"        case '{letter}': {func}(buffer); break;")
-    lines.append("        default:")
-    lines.append('            throw std::runtime_error(')
-    lines.append('                std::string("tip de mesaj netratat in process: ")')
-    lines.append('                + static_cast<char>(message_type));')
+    lines = ["// Decodeaza mesajul care incepe la p (byte-ul de tip) si il da handler-ului.",
+             "// Tipurile necunoscute nu ajung aici: parser-ul le sare inainte.",
+             "template <typename Handler>",
+             "inline void dispatch(uint8_t type, const uint8_t* p, Handler& handler) {",
+             "    switch (type) {"]
+    for letter, spec in specs.items():
+        lines.append(f"        case '{letter}': handler.on({spec['NAME']}::decode(p)); return;")
+    lines.append("        default: return;")
     lines.append("    }")
     lines.append("}")
     return '\n'.join(lines)
 
+
+def emit_json(letter, spec):
+    name = spec['NAME']
+    fields = fields_of(letter, spec)
+    width = max(len(f['name']) for f in fields + [{'name': 'Message Type'}]) + 3
+
+    def key(n):
+        return f'"{n}",'.ljust(width)
+
+    lines = [f"inline void write_json(JsonLine& j, const {name}& m) {{",
+             f"    j.chr({key('Message Type')} {name}::type);"]
+    for f in fields:
+        if f['kind'] == 'char':
+            lines.append(f"    j.chr({key(f['name'])} m.{f['member']});")
+        elif f['kind'] == 'str':
+            lines.append(f"    j.str({key(f['name'])} m.{f['member']}.data(), {f['size']});")
+        else:
+            lines.append(f"    j.num({key(f['name'])} m.{f['member']});")
+    lines.append("}")
+    return '\n'.join(lines)
+
+
+def messages_header(specs):
+    parts = [HEADER_COMMENT,
+             "#ifndef ITCH_MESSAGES_GEN_H",
+             "#define ITCH_MESSAGES_GEN_H",
+             "",
+             "#include <array>",
+             "#include <cstdint>",
+             "#include <cstring>",
+             "",
+             '#include "byte_order.h"',
+             "",
+             "namespace itch {",
+             "",
+             emit_lengths(specs),
+             ""]
+    for letter, spec in specs.items():
+        parts.append(emit_struct(letter, spec))
+        parts.append("")
+    parts.append(emit_dispatch(specs))
+    parts.append("")
+    parts.append("}  // namespace itch")
+    parts.append("")
+    parts.append("#endif  // ITCH_MESSAGES_GEN_H")
+    return '\n'.join(parts) + '\n'
+
+
+def json_header(specs):
+    parts = [HEADER_COMMENT,
+             "#ifndef ITCH_JSON_GEN_H",
+             "#define ITCH_JSON_GEN_H",
+             "",
+             '#include "jsonwriter.h"',
+             '#include "messages_gen.h"',
+             "",
+             "namespace itch {",
+             ""]
+    for letter, spec in specs.items():
+        parts.append(f"// --- {letter}: {spec['NAME']} ---")
+        parts.append(emit_json(letter, spec))
+        parts.append("")
+    parts.append("}  // namespace itch")
+    parts.append("")
+    parts.append("#endif  // ITCH_JSON_GEN_H")
+    return '\n'.join(parts) + '\n'
+
+
+def write(path, text):
+    with open(path, 'w', newline='\n') as f:
+        f.write(text)
+
+
 def main():
-    path = sys.argv[1] if len(sys.argv) > 1 else '../data/messagesSpecs.json'
-    with open(path) as f:
+    if len(sys.argv) != 4:
+        sys.exit("usage: generate.py <messagesSpecs.json> <messages_gen.h> <json_gen.h>")
+    specs_path, messages_path, json_path = sys.argv[1:]
+
+    with open(specs_path) as f:
         specs = json.load(f)
 
-    missing = set(specs) - set(STRUCTS)
-    if missing:
-        sys.exit(f"tipuri in JSON fara struct in generator: {sorted(missing)}")
+    for letter, spec in specs.items():
+        assert len(letter) == 1, f"cheie invalida in JSON: {letter!r}"
+        assert 'NAME' in spec, f"{letter}: lipseste NAME"
 
-    print("// Generat de gen_writers.py -- nu edita manual.")
-    print("// Regenereaza dupa orice modificare in messagesSpecs.json.\n")
-    for letter in specs:
-        print(f"// --- {letter} ---")
-        print(emit(letter, specs[letter]))
-        print()
-    print("// --- dispatch ---")
-    print(emit_dispatch(specs))
+    write(messages_path, messages_header(specs))
+    write(json_path, json_header(specs))
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except AssertionError as e:
+        sys.exit(f"generate.py: specificatie invalida: {e}")

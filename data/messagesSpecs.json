@@ -1,5 +1,6 @@
 {
     "S": {
+        "NAME": "SystemEvent",
         "LENGTH": 12,
         "FORMAT": ">1s HH 6s 1s",
         "FIELDS": [
@@ -13,6 +14,7 @@
         "UINT48_FIELDS": [3]
     },
     "R": {
+        "NAME": "StockDirectory",
         "LENGTH": 39,
         "FORMAT": ">1s HH 6s 8s 1s 1s I 1s 1s 2s 1s 1s 1s 1s 1s I 1s",
         "FIELDS": [
@@ -39,6 +41,7 @@
         "UINT48_FIELDS": [3]
     },
     "H": {
+        "NAME": "StockTradingAction",
         "LENGTH": 25,
         "FORMAT": ">1s HH 6s 8s 1s 1s 4s",
         "FIELDS": [
@@ -55,6 +58,7 @@
         "UINT48_FIELDS": [3]
     },
     "Y": {
+        "NAME": "RegSHORestriction",
         "LENGTH": 20,
         "FORMAT": ">1s HH 6s 8s 1s",
         "FIELDS": [
@@ -69,6 +73,7 @@
         "UINT48_FIELDS": [3]
     },
     "L": {
+        "NAME": "MarketParticipantPosition",
         "LENGTH": 26,
         "FORMAT": ">1s HH 6s 4s 8s 1s 1s 1s",
         "FIELDS": [
@@ -86,6 +91,7 @@
         "UINT48_FIELDS": [3]
     },
     "V": {
+        "NAME": "MWCBDeclineLevel",
         "LENGTH": 35,
         "FORMAT": ">1s HH 6s QQQ",
         "FIELDS": [
@@ -101,6 +107,7 @@
         "UINT48_FIELDS": [3]
     },
     "W": {
+        "NAME": "MWCBStatus",
         "LENGTH": 12,
         "FORMAT": ">1s HH 6s 1s",
         "FIELDS": [
@@ -114,6 +121,7 @@
         "UINT48_FIELDS": [3]
     },
     "J": {
+        "NAME": "LULDAuctionCollar",
         "LENGTH": 35,
         "FORMAT": ">1s HH 6s 8s IIII",
         "FIELDS": [
@@ -131,6 +139,7 @@
         "UINT48_FIELDS": [3]
     },
     "h": {
+        "NAME": "OperationalHalt",
         "LENGTH": 21,
         "FORMAT": ">1s HH 6s 8s 1s 1s",
         "FIELDS": [
@@ -146,6 +155,7 @@
         "UINT48_FIELDS": [3]
     },
     "A": {
+        "NAME": "AddOrder",
         "LENGTH": 36,
         "FORMAT": ">1s HH 6s Q 1s I 8s I",
         "FIELDS": [
@@ -163,6 +173,7 @@
         "UINT48_FIELDS": [3]
     },
     "F": {
+        "NAME": "AddOrderMPID",
         "LENGTH": 40,
         "FORMAT": ">1s HH 6s Q 1s I 8s I 4s",
         "FIELDS": [
@@ -181,6 +192,7 @@
         "UINT48_FIELDS": [3]
     },
     "E": {
+        "NAME": "OrderExecuted",
         "LENGTH": 31,
         "FORMAT": ">1s HH 6s Q I Q",
         "FIELDS": [
@@ -196,6 +208,7 @@
         "UINT48_FIELDS": [3]
     },
     "C": {
+        "NAME": "OrderExecutedWithPrice",
         "LENGTH": 36,
         "FORMAT": ">1s HH 6s Q I Q 1s I",
         "FIELDS": [
@@ -213,6 +226,7 @@
         "UINT48_FIELDS": [3]
     },
     "X": {
+        "NAME": "OrderCancel",
         "LENGTH": 23,
         "FORMAT": ">1s HH 6s Q I",
         "FIELDS": [
@@ -227,6 +241,7 @@
         "UINT48_FIELDS": [3]
     },
     "D": {
+        "NAME": "OrderDelete",
         "LENGTH": 19,
         "FORMAT": ">1s HH 6s Q",
         "FIELDS": [
@@ -240,6 +255,7 @@
         "UINT48_FIELDS": [3]
     },
     "U": {
+        "NAME": "OrderReplace",
         "LENGTH": 35,
         "FORMAT": ">1s HH 6s QQ II",
         "FIELDS": [
@@ -256,6 +272,7 @@
         "UINT48_FIELDS": [3]
     },
     "P": {
+        "NAME": "TradeMessage",
         "LENGTH": 44,
         "FORMAT": ">1s HH 6s Q 1s I 8s I Q",
         "FIELDS": [
@@ -274,6 +291,7 @@
         "UINT48_FIELDS": [3]
     },
     "Q": {
+        "NAME": "CrossTrade",
         "LENGTH": 40,
         "FORMAT": ">1s HH 6s Q 8s I Q 1s",
         "FIELDS": [
@@ -291,6 +309,7 @@
         "UINT48_FIELDS": [3]
     },
     "B": {
+        "NAME": "BrokenTrade",
         "LENGTH": 19,
         "FORMAT": ">1s HH 6s Q",
         "FIELDS": [
@@ -304,6 +323,7 @@
         "UINT48_FIELDS": [3]
     },
     "I": {
+        "NAME": "NOII",
         "LENGTH": 50,
         "FORMAT": ">1s HH 6s QQ 1s 8s III 1s 1s",
         "FIELDS": [
@@ -325,6 +345,7 @@
         "UINT48_FIELDS": [3]
     },
     "N": {
+        "NAME": "PriceImprovementIndicator",
         "LENGTH": 20,
         "FORMAT": ">1s HH 6s 8s 1s",
         "FIELDS": [
@@ -334,6 +355,44 @@
             "Timestamp",
             "Stock",
             "Interest Flag"
+        ],
+        "ASCII_FIELDS": [0, 4, 5],
+        "UINT48_FIELDS": [3]
+    },
+    "K": {
+        "NAME": "IPOQuotingPeriodUpdate",
+        "LENGTH": 28,
+        "FORMAT": ">1s HH 6s 8s I 1s I",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "IPO Quotation Release Time",
+            "IPO Quotation Release Qualifier",
+            "IPO Price"
+        ],
+        "ASCII_FIELDS": [0, 4, 6],
+        "UINT48_FIELDS": [3]
+    },
+    "O": {
+        "NAME": "DirectListingCapitalRaise",
+        "LENGTH": 48,
+        "FORMAT": ">1s HH 6s 8s 1s III Q II",
+        "FIELDS": [
+            "Message Type",
+            "Stock Locate",
+            "Tracking Number",
+            "Timestamp",
+            "Stock",
+            "Open Eligibility Status",
+            "Minimum Allowable Price",
+            "Maximum Allowable Price",
+            "Near Execution Price",
+            "Near Execution Time",
+            "Lower Price Range Collar",
+            "Upper Price Range Collar"
         ],
         "ASCII_FIELDS": [0, 4, 5],
         "UINT48_FIELDS": [3]
