@@ -3,3 +3,8 @@
 *.itch
 build/
 cmake-build-*/
+.DS_Store
+.idea/
+cpp/generated/
+.venv/
+data/*.jsonl
