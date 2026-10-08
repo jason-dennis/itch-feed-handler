@@ -1,6 +1,7 @@
 *.jsonl
 *.BX_ITCH_50
 *.itch
+!tests/data/*.itch
 build/
 cmake-build-*/
 .DS_Store
