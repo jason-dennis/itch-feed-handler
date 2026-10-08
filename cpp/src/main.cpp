@@ -14,7 +14,7 @@ int main(int argc, char** argv){
     if(argc != 2){
         throw std::runtime_error("Invalid numbers of arguments");
     }
-    MappedFile mapped("sample.BX_ITCH_50");
+    MappedFile mapped("truncated.BX_ITCH_50");
     size_t size = mapped.size();
     const uint8_t* buffer = mapped.data();
 
