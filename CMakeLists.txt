@@ -60,6 +60,48 @@ if(NOT EXISTS ${GEN_DIR}/messages_gen.h OR NOT EXISTS ${GEN_DIR}/json_gen.h)
 endif()
 
 # ---------------------------------------------------------------------------
+# Biblioteca "itch": headerele + codul generat, folosite de executabil si de teste
+# ---------------------------------------------------------------------------
+add_custom_target(itch_generate DEPENDS ${GEN_HEADERS})
+
+add_library(itch INTERFACE)
+target_include_directories(itch INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/cpp/include
+        ${GEN_DIR})
+target_compile_features(itch INTERFACE cxx_std_17)
+
+# Setarile comune pentru orice target care foloseste biblioteca:
+# generare, warning-uri, -march=native, sanitizers.
+function(itch_setup_target target)
+    add_dependencies(${target} itch_generate)
+    target_link_libraries(${target} PRIVATE itch)
+
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    if(ITCH_NATIVE AND NOT MSVC)
+        include(CheckCXXCompilerFlag)
+        check_cxx_compiler_flag("-march=native" ITCH_HAS_MARCH_NATIVE)
+        if(ITCH_HAS_MARCH_NATIVE)
+            target_compile_options(${target} PRIVATE -march=native)
+        endif()
+    endif()
+
+    if(ITCH_SANITIZE)
+        if(MSVC)
+            target_compile_options(${target} PRIVATE /fsanitize=address)
+        else()
+            set(san -fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all)
+            target_compile_options(${target} PRIVATE ${san})
+            target_link_options(${target} PRIVATE ${san})
+        endif()
+    endif()
+endfunction()
+
+# ---------------------------------------------------------------------------
 # Executabil
 # ---------------------------------------------------------------------------
 add_executable(ITCHFeedhandler
@@ -70,42 +112,9 @@ add_executable(ITCHFeedhandler
         cpp/include/jsonwriter.h
         cpp/include/mapped_file.h
         ${GEN_HEADERS})
+itch_setup_target(ITCHFeedhandler)
 
-target_include_directories(ITCHFeedhandler PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/cpp/include
-        ${GEN_DIR})
-
-# --- warning-uri ---
-if(MSVC)
-    target_compile_options(ITCHFeedhandler PRIVATE /W4 /permissive-)
-else()
-    target_compile_options(ITCHFeedhandler PRIVATE -Wall -Wextra -Wpedantic)
-endif()
-
-# --- optimizare pentru procesorul curent ---
-# (Release aduce deja -O3 pe GCC/Clang si /O2 pe MSVC)
-if(ITCH_NATIVE AND NOT MSVC)
-    include(CheckCXXCompilerFlag)
-    check_cxx_compiler_flag("-march=native" ITCH_HAS_MARCH_NATIVE)
-    if(ITCH_HAS_MARCH_NATIVE)
-        target_compile_options(ITCHFeedhandler PRIVATE -march=native)
-    else()
-        message(STATUS "-march=native not supported by this compiler, skipping")
-    endif()
-endif()
-
-# --- sanitizers ---
-if(ITCH_SANITIZE)
-    if(MSVC)
-        target_compile_options(ITCHFeedhandler PRIVATE /fsanitize=address)
-    else()
-        set(ITCH_SAN_FLAGS -fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all)
-        target_compile_options(ITCHFeedhandler PRIVATE ${ITCH_SAN_FLAGS})
-        target_link_options(ITCHFeedhandler PRIVATE ${ITCH_SAN_FLAGS})
-    endif()
-endif()
-
-# --- profile-guided optimization ---
+# --- profile-guided optimization (doar pentru executabil) ---
 # Pasii: configurare cu GENERATE + build, o rulare pe date reale, apoi
 # reconfigurare cu USE + build, in ACELASI folder de build.
 if(NOT ITCH_PGO STREQUAL "OFF")
@@ -146,4 +155,40 @@ if(NOT ITCH_PGO STREQUAL "OFF")
         target_link_options(ITCHFeedhandler PRIVATE ${ITCH_PGO_FLAGS})
         message(STATUS "PGO: ${ITCH_PGO}")
     endif()
+endif()
+
+# ---------------------------------------------------------------------------
+# Teste (GoogleTest)
+# ---------------------------------------------------------------------------
+option(ITCH_BUILD_TESTS "Build the unit tests" ON)
+
+if(ITCH_BUILD_TESTS)
+    include(FetchContent)
+    if(POLICY CMP0135)
+        cmake_policy(SET CMP0135 NEW)
+    endif()
+    FetchContent_Declare(googletest
+            URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)   # necesar pe MSVC
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+    set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
+    add_executable(itch_tests tests/test_parser.cpp)
+    itch_setup_target(itch_tests)
+    target_link_libraries(itch_tests PRIVATE GTest::gtest_main)
+
+    include(GoogleTest)
+    gtest_discover_tests(itch_tests)
+
+    # C++ contra oracolul Python, pe fixture-urile din tests/data
+    add_test(NAME oracle_comparison
+            COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/compare_with_oracle.py
+            $<TARGET_FILE:ITCHFeedhandler>
+            ${CMAKE_CURRENT_SOURCE_DIR}/data/messagesSpecs.json
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/data
+            ${CMAKE_CURRENT_SOURCE_DIR}/python
+            ${CMAKE_CURRENT_BINARY_DIR}/oracle_comparison)
 endif()

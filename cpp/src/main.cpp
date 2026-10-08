@@ -11,10 +11,10 @@
 #include "mapped_file.h"
 int main(int argc, char** argv){
     try {
-        if(argc != 2){
+        if(argc != 3 &&  argc != 4 ){
             throw std::runtime_error("Invalid numbers of arguments");
         }
-        MappedFile mapped("sample.BX_ITCH_50");
+        MappedFile mapped(argv[2]);
         size_t size = mapped.size();
         const uint8_t* buffer = mapped.data();
 
@@ -39,13 +39,17 @@ int main(int argc, char** argv){
 
         }
         else if(std::string(argv[1]) == "jsonl"){
-            JsonlHandler handler("`data/messages_cpp.jsonl");
+            if (argc != 4) {
+                throw std::runtime_error("Invalid numbers of arguments");
+            }
+            JsonlHandler handler(argv[3]);
             auto before = std::chrono::steady_clock::now();
             auto stats =  parse(buffer, size, handler);
             auto after = std::chrono::steady_clock::now();
 
             const auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(after - before);
             std::cout << int_ms.count() << " ms\n";
+            std::cout<<"parsed: "<<stats.parsed <<" skipped: "<<stats.skipped;
 
         }
         else{
@@ -53,7 +57,7 @@ int main(int argc, char** argv){
         }
     }
     catch (const std::exception& e){
-        std::cerr<<e.what();
+        std::cerr<<e.what() << '\n';
         return 1;
     }
     return 0;
